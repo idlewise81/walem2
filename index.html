@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>Water level</title>
+
+    <script type="text/javascript"  src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=visualization"></script> 
+   <!-- <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=initialize"></script>-->
+
+    <script src="coordinates1.js"></script>  
+    <script src="coordinates2.js"></script>  
+
+    <script src="https://www.google.com/jsapi"></script> 
+
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/2.1.9/highcharts.js"></script>
+    <script src="chartkick.js"></script>
+    <script>
+      Chartkick.configure({language: "de"});
+    </script>
+        <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
+        <script src="https://www.gstatic.com/firebasejs/3.5.2/firebase.js"></script>
+        <script>
+          // Initialize Firebase
+          var config = {
+            apiKey: "AIzaSyDZM4nxSVWRE_iqfhA5gQZ84t7_TPQPDrQ",
+            authDomain: "moblert-b1226.firebaseapp.com",
+            databaseURL: "https://moblert-b1226.firebaseio.com",
+            storageBucket: "moblert-b1226.appspot.com",
+            messagingSenderId: "1024282195216"
+          };
+          firebase.initializeApp(config);
+        </script>
+
+    <style type="text/css">
+      #map, html, body {
+        padding: 0;
+        margin: 5px;
+        height: 90%;
+      }
+      #infoP{
+        font-size: 1.2em;
+        padding-bottom: 1.2em;
+      }   
+      #panel {
+        width: 300px;
+        float: right;
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        
+        margin: 10px;
+      }
+
+      h1,h2,h3,h4 {
+        color: #367EA6;
+        padding-top: 6px;
+        padding-bottom: 1px;
+      }
+    </style>
+
+    <script type="text/javascript">
+     /// google for moblert APIKEY =AIzaSyDjYGJU_XR_rTfED011VTMnxCV146FY5uM 
+
+      var map;
+      var floodmap1;
+      var floodmap2;
+
+      var geocoder;
+      var elevator
+      var infowindow
+      var elev
+      var coordmap1 =[];
+      var coordArray1=[];
+
+      var coordmap2 =[];
+      var coordArray2=[];    
+
+      var elevCalumpang;
+      var elevTumana;
+
+      var gradient = [
+          'rgba(0, 255, 255, 0)',
+          'rgba(0, 255, 255, 1)',
+          'rgba(0, 191, 255, 1)',
+          'rgba(0, 127, 255, 1)',
+          'rgba(0, 63, 255, 1)',
+          'rgba(0, 0, 255, 1)',
+          'rgba(0, 0, 223, 1)',
+          'rgba(0, 0, 191, 1)',
+          'rgba(0, 0, 159, 1)',
+          'rgba(0, 0, 127, 1)',
+          'rgba(63, 0, 91, 1)',
+          'rgba(127, 0, 63, 1)',
+          'rgba(191, 0, 31, 1)',
+          'rgba(255, 0, 0, 1)'
+      ]
+        
+     
+///==========================================
+        function getWaterLevelonFirebase(){
+          var ref = new Firebase("https://moblert-b1226.firebaseio.com/current_level");
+          ref.on("value", function(snapshot) {
+            
+            var waterLevel = snapshot.val();
+              new Chartkick.ColumnChart("chart-1",snapshot.val());
+              console.log(waterLevel);
+              elev = parseInt(waterLevel.Tumana);
+              elevTumana = elev;
+              elev =elev-2;
+              
+              getCoord1(coordinates1,elev);
+              if (floodmap1!=null)
+                  floodmap1.setMap(null);
+              floodmap1 = new google.maps.visualization.HeatmapLayer({data: coordmap1,map: map}); 
+              floodmap1.set('gradient', gradient);
+
+              elev = parseInt(waterLevel.Calumpang);
+              elevCalumpang =elev;
+              elev =elev-2;
+              getCoord2(coordinates2,elev);
+              if (floodmap2!=null)
+                  floodmap2.setMap(null);
+              floodmap2 = new google.maps.visualization.HeatmapLayer({data: coordmap2,map: map});               
+          });
+
+
+        }
+
+        function getCoord1(json,elevation){
+          if(floodmap1!=null){
+             coordmap1=[];coordArray1=[];
+          }   
+          for (var prop in json) {
+            coord = json[prop];
+            if(coord!=null){
+              if (json[prop].elevation<elevation){
+                for (var position in coord){
+                  if (position=="location"){
+                       coordmap1.push(new google.maps.LatLng(coord[position].lat,coord[position].lng));
+                      // coordArray.push({elev:json[prop].elevation,lat:coord[position].lat,lng:coord[position].lng});                                        
+                  }
+                }
+              }
+            }  
+          }
+        }
+        function getCoord2(json,elevation){
+          if(floodmap2!=null){
+             coordmap2=[];coordArray2=[];
+          }   
+          for (var prop in json) {
+            coord = json[prop];
+            if(coord!=null){
+              if (json[prop].elevation<elevation){
+                for (var position in coord){
+                  if (position=="location"){
+                       coordmap2.push(new google.maps.LatLng(coord[position].lat,coord[position].lng));
+                      // coordArray.push({elev:json[prop].elevation,lat:coord[position].lat,lng:coord[position].lng});                                        
+                  }
+                }
+              }
+            }  
+          }
+        }
+
+        function setCoordArray1(json){
+          if(floodmap1!=null){
+             coordArray1=[];
+          }   
+          for (var prop in json) {
+            coord = json[prop];
+            if(coord!=null){
+             // if (json[prop].elevation<elevation){
+                for (var position in coord){
+                  if (position=="location"){
+                      // coordmap.push(new google.maps.LatLng(coord[position].lat,coord[position].lng));
+                       coordArray1.push({elev:json[prop].elevation,lat:coord[position].lat,lng:coord[position].lng});                                        
+                  }
+                }
+             // }
+            }  
+          }
+        }
+
+        function setCoordArray2(json){
+          if(floodmap2!=null){
+             coordArray2=[];
+          }   
+          for (var prop in json) {
+            coord = json[prop];
+            if(coord!=null){
+                for (var position in coord){
+                  if (position=="location"){
+                       coordArray2.push({elev:json[prop].elevation,lat:coord[position].lat,lng:coord[position].lng});                                        
+                  }
+                }
+            }  
+          }
+        }        
+        function setcoordArray(json,elevation){
+          if(floodmap!=null){
+             coordmap=[];coordArray=[];
+          }   
+          for (var prop in json) {
+            coord = json[prop];
+            if(coord!=null){
+              if (json[prop].elevation<elevation){
+                for (var position in coord){
+                  if (position=="location"){
+                       coordmap.push(new google.maps.LatLng(coord[position].lat,coord[position].lng));
+                       coordArray.push({elev:json[prop].elevation,lat:coord[position].lat,lng:coord[position].lng});                                        
+                  }
+                }
+              }
+            }  
+          }
+        }
+
+
+        var elevContent = "";
+        var infowindow = new google.maps.InfoWindow({maxWidth: 200, 
+          content: elevContent
+        });
+
+
+       var elevFlag;
+
+
+    function getElevContent(result) {
+        var elevContent = "";
+        resultElevation = Math.round(result.elevation);
+        if (elev > result.elevation)
+            elevContent = elevContent + "<span style='color:red'><b>Probable Water Level:" + Math.round(elev - result.elevation) + " meters.</b></span>";
+        else if (result.elevation - elev <= 5)
+            elevContent = elevContent + "<span style='color:orange'><b>Above Water Level:" + Math.round(result.elevation - elev) + " meters.</b></span>";
+        else if (result.elevation - elev > 5)
+            elevContent = elevContent + "<span style='color:green'><b>Above Water Level:" + Math.round(result.elevation - elev) + " meters.</b></span>";
+      elevContent = elevContent + "<br><b>Elevation:" + Math.round(result.elevation) +"</b>";
+        return elevContent;
+    }
+    function codeLatLng(latlng,setEl) {
+        console.log(latlng.lat()+" "+latlng.lng());
+        if (latlng.lat() >=14.6363){
+            elev = elevTumana;
+        } else {
+            elev = elevCalumpang;
+        }
+        geocoder.geocode({ 'latLng': latlng }, function(results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                 var name;
+                if (results[1])
+                    name = results[1].formatted_address;
+                else
+                    name = "";
+                marker.setPosition(latlng);
+
+                var locations = [];
+                locations.push(latlng);
+                var positionalRequest = {
+                    'locations': locations
+                }
+                elevator.getElevationForLocations(positionalRequest, function(results, status) {
+                    if (status == google.maps.ElevationStatus.OK) {
+                        // Retrieve the first result
+
+                        var elevContent = '';
+                        if (results[0]) {
+
+                            elevContent = getElevContent(results[0]);
+                        }
+                        var area ="";
+                        if (latlng.lat() >=14.6363){
+                            area ="Tumana Water Level Sensor "+elevTumana+" meters";
+                        } else {
+                            area ="Calumpang Water Level Sensor "+elevCalumpang+" meters";
+                        }
+                        var content;
+                        content = "<h2>" + name + "</h2> " +
+                                  "<span><b>" + area + "</b></span>"+                                   
+                                  "<p id='infoP'>" + elevContent + "</p>";
+
+                        infowindow.setContent(content);
+                        infowindow.open(map, marker);
+                    }
+                });
+            } else {
+                alert("Geocode was not successful for the following reason: " + status);
+            }
+        });
+    }      
+///==========================================
+
+    function initialize() {
+      geocoder = new google.maps.Geocoder();
+      elevator = new google.maps.ElevationService();
+      infowindow = new google.maps.InfoWindow({maxWidth: 200, map: map});
+
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 14,
+          center: new google.maps.LatLng(14.653526323556342,121.09402298927307),
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          disableDefaultUI: true,
+          zoomControl: true
+        });
+        map.setOptions({draggableCursor:'crosshair'});
+        marker = new google.maps.Marker({
+            position: [14.653526323556342,121.09402298927307],
+            map: map
+        });
+       // google.maps.event.addDomListener(document.getElementById('load-button'), 'click', getCoordinates);
+      //  google.maps.event.addDomListener(document.getElementById('compute-button'), 'click', compute);
+
+      //  google.maps.event.addListener(map, 'click', function (event) {//mousemove
+      //        displayCoordinates(event.latLng);
+
+      //    });
+        google.maps.event.addListener(map, 'click', function(event) {
+            codeLatLng(event.latLng);
+        });
+
+      setCoordArray1(coordinates1);
+      setCoordArray2(coordinates2);
+      getWaterLevelonFirebase();
+        
+    }
+      google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+
+  </head>
+  <body>
+  
+    <div id="panel">
+    <h2 style="margin-top:-15px"> Water Level Elevation Monitor with SMS Notification</h2> 
+      <h4 style="margin-top:-10px">Water Level Sensor Data</h4>
+      <div id="chart-1" style="height: 300px;"></div>
+        
+      <div><p>this a small contribution in fighting natural disaster like flood & probably save a life."</p></div>
+    
+      
+    </div>
+
+  <div id="map"></div>  
+  <p>Disclaimer: Please note that this <b>Water level Elevation generated map</b> is not sufficient enough in full extent for the analysis since there are many other factors like surface runoff, flow diversion, land type and also responsible for the flood coverage along with elevation. But we think this <b>real time water level elevation map</b> should help in some extent in the following areas especially on Marikina along Tumana and Calumpang river banks:</p>
+  <ul>
+  <li>It may be useful to some extent for flood risk assessment or in flood management, flood control.</li>
+  <li>It can help to provide flood alert/flood warning if flood water level at certain point is rising.</li>
+  <li>It can help to locate places at higher levels to escape from floods or in flood rescue/flood relief operation.</li>
+  </ul>  
+  </body>
+</html>

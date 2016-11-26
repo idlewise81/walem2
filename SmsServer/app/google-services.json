@@ -1,0 +1,43 @@
+{
+  "project_info": {
+    "project_number": "1024282195216",
+    "firebase_url": "https://moblert-b1226.firebaseio.com",
+    "project_id": "moblert-b1226",
+    "storage_bucket": "moblert-b1226.appspot.com"
+  },
+  "client": [
+    
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1024282195216:android:42b3f1a20aa2e137",
+        "android_client_info": {
+          "package_name": "lagsit.smsserver"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1024282195216-r3j99lqis3413jv9o61eevurr4naj7pi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBU6IyTW7R9vT2GO2d0clswAwlvuF19IsY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
